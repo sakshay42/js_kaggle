@@ -2,8 +2,6 @@
 
 A modeling pipeline for the [Jane Street Real-Time Market Data Forecasting](https://www.kaggle.com/competitions/jane-street-real-time-market-data-forecasting) Kaggle competition. The goal is to predict `responder_6` — a financial return signal — from 79 anonymized market features across 39 symbols.
 
-> **Note:** This was completed after the competition closed, as a portfolio and learning project.
-
 ---
 
 ## Problem Overview
@@ -67,11 +65,15 @@ A modeling pipeline for the [Jane Street Real-Time Market Data Forecasting](http
 
 | Model | Weighted R² (val) |
 |---|---|
-| LGBM baseline | ~0.003 |
-| LGBM + residual stacking | ~0.003 |
-| PCA (20) + LGBM | ~0.004 |
+| LGBM baseline | 0.005559 |
+| LGBM + residual lgbm | 0.005550 |
+| PCA (20) + LGBM | 0.009243 |
 
-> R² values are low by design — this is a notoriously noisy financial prediction task. The competition leaderboard scores are in a similar range.
+> R² values are low in general. The best score R^2 was around 0.013890.
+>
+> I have only worked with a fraction of teh data because of computating constraints. These results can't be generalised to the whole data.
+>
+> 
 
 ---
 
