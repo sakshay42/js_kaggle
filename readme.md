@@ -29,7 +29,7 @@ A modeling pipeline for the [Jane Street Real-Time Market Data Forecasting](http
 |---|---|
 | `01_eda.ipynb` | Exploratory data analysis — target distribution, NaN patterns, weight analysis, feature correlations, responder correlations |
 | `02_lgbm_baseline.ipynb` | LGBM global model with market averages and rolling features; symbol-specific residual modeling for problem symbols (4, 12, 17, 28) |
-| `03_factor_model.ipynb` | PCA factor model (10/20/30 components) + LGBM on factors; generalization test on partition 6 |
+| `03_factors_lgbm.ipynb` | PCA factor model (10/20/30 components) + LGBM on factors; generalization test on partition 6 |
 | `scratchpad.ipynb` | Early exploratory attempts — not intended to run end-to-end |
 
 ---
