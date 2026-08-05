@@ -1,0 +1,14 @@
+numpy
+pandas
+scipy
+scikit-learn
+pyarrow
+lightgbm
+xgboost
+tqdm
+joblib
+psutil
+optuna
+torchmetrics
+pytorch-lightning
+einops

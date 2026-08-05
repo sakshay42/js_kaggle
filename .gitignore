@@ -1,0 +1,23 @@
+data/
+*.parquet
+experiments/
+models/
+logs/
+archive/
+
+# Python / notebook cache
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Local environment
+.venv/
+venv/
+.env
+
+# OS/editor files
+.DS_Store
+
+# Slurm outputs
+*.out
+*.err

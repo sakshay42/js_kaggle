@@ -1,119 +1,86 @@
 # Jane Street Real-Time Market Data Forecasting
 
-A modeling pipeline for the [Jane Street Real-Time Market Data Forecasting](https://www.kaggle.com/competitions/jane-street-real-time-market-data-forecasting) Kaggle competition. The goal is to predict `responder_6` — a financial return signal — from 79 anonymized market features across 39 symbols.
+Project workspace for the Jane Street Real-Time Market Data Forecasting Kaggle competition.
 
----
+Current focus: partition 8 only, memory-aware EDA/cleaning, and Longleaf GPU baselines.
 
-## Problem Overview
+## Current Workflow
 
-- **Target:** `responder_6` — a bounded continuous return signal in [-5, 5]
-- **Features:** 79 anonymized features per row; 3 are categorical (`feature_09`, `10`, `11`)
-- **Data:** Time-series market data partitioned by date, ~39 symbols, ~1600 date IDs
-- **Metric:** Weighted zero-mean R² (weights are provided per row)
-
----
-
-## Key EDA Findings
-
-- Raw feature correlations with `responder_6` are tiny (max ~0.07) — signal is weak and non-linear
-- `feature_06` and `feature_07` are the most predictive raw features
-- Heavy NaNs before `date_id = 247` — data before this cutoff is dropped
-- Weights are dominated by symbols 1, 13, and 19 — model performance on these matters most
-- `responder_6` is fat-tailed, near-zero mean, and shows near-zero autocorrelation at all lags
-
----
-
-## Notebooks
-
-| Notebook | Description |
+| File | Purpose |
 |---|---|
-| `01_eda.ipynb` | Exploratory data analysis — target distribution, NaN patterns, weight analysis, feature correlations, responder correlations |
-| `02_lgbm_baseline.ipynb` | LGBM global model with market averages and rolling features; symbol-specific residual modeling for problem symbols (4, 12, 17, 28) |
-| `03_factors_lgbm.ipynb` | PCA factor model (10/20/30 components) + LGBM on factors; generalization test on partition 6 |
-| `scratchpad.ipynb` | Early exploratory attempts — not intended to run end-to-end |
-
----
-
-## Modeling Approach
-
-### Preprocessing
-- Drop `date_id < 247` (excessive NaNs in early data)
-- Drop categorical features (`feature_09`, `feature_10`, `feature_11`)
-- Fill remaining NaNs with zero
-- Reduce memory via float32 casting
-
-### Feature Engineering
-- Top 30 correlated features selected per fold
-- Market averages: `groupby(['date_id', 'time_id'])` mean for cross-sectional signal
-- Rolling statistics (window=1000) on top 10 features per symbol
-
-### Models
-
-**Baseline — LGBM (`02_lgbm_baseline.ipynb`)**
-- Global LightGBM on engineered features
-- Symbol-specific residual models for high-variance symbols
-- Global residual stacking (LGBM → residuals → second LGBM)
-
-**Factor Model — PCA + LGBM (`03_factor_model.ipynb`)**
-- PCA compression of feature space (10, 20, 30 components tested)
-- LGBM on PCA factors — 20 components gave best generalization
-- Ridge regression on factors as linear baseline
-
----
-
-## Results
-
-| Model | Weighted R² (val) |
-|---|---|
-| LGBM baseline | 0.005559 |
-| LGBM + residual lgbm | 0.005550 |
-| PCA (20) + LGBM | 0.009243 |
-
-> R² values are low in general. The best score R^2 was around 0.013890.
->
-> I have only worked with a fraction of teh data because of computating constraints. These results can't be generalised to the whole data.
->
-> 
-
----
-
-## Repository Structure
-
-```
-├── notebooks/
-│   ├── 01_eda.ipynb
-│   ├── 02_lgbm_baseline.ipynb
-│   ├── 03_factor_model.ipynb
-│   └── scratchpad.ipynb
-├── README.md
-└── requirements.txt
-```
-
----
+| `notebooks/01_kaggle_eda.ipynb` | Original Kaggle EDA notebook |
+| `notebooks/02_kaggle_lgbm.ipynb` | Original Kaggle LightGBM experiments |
+| `notebooks/03_kaggle_factor.ipynb` | Original Kaggle factor/PCA experiments |
+| `notebooks/01_loader_p8.ipynb` | Batch parquet loader for partition 8 without loading the full dataset into memory |
+| `notebooks/02_sample_eda_p8.ipynb` | Small sample EDA for missingness, weights, symbols, and feature relationships |
+| `notebooks/03_stream_eda_p8.ipynb` | Streaming EDA over full partition 8 using aggregates instead of full in-memory data |
+| `notebooks/04_clean_p8.ipynb` | Notebook version of partition 8 cleaning by dropping missing rows |
+| `notebooks/05_lgbm_sample_p8.ipynb` | Small-sample LightGBM baseline for checking setup and top features |
+| `notebooks/06_top20_lgbm_eval.ipynb` | Post-training evaluation plots for top-20 LightGBM on train/valid/test |
+| `scripts/clean_p8.py` | Longleaf script to clean partition 8 in batches |
+| `scripts/validate_p8.py` | Longleaf script to validate cleaned partition 8 |
+| `scripts/gpu_check.py` | Longleaf script to test LightGBM, XGBoost, and PyTorch GPU availability |
+| `scripts/lgbm_top20.py` | Longleaf LightGBM baseline and top-20 feature importance script |
+| `scripts/make_top20_p8.py` | Creates reduced top-20 train/valid/test parquet files |
+| `scripts/train_top20_lgbm.py` | Tunes LightGBM on top-20 train/valid parquet files |
 
 ## Data
 
-Data is available on Kaggle and requires a Kaggle account to download:
-```bash
-kaggle competitions download -c jane-street-real-time-market-data-forecasting
-```
-All notebooks use Kaggle paths (`/kaggle/input/...`) and are designed to run in a Kaggle kernel environment.
+Raw and cleaned parquet files are not tracked in git.
 
----
+Expected Longleaf paths:
 
-## Requirements
-
-```bash
-pip install -r requirements.txt
+```text
+/users/s/a/sakshay/js_kaggle/data/part_8.parquet
+/users/s/a/sakshay/js_kaggle/data/clean/partition_8_drop_missing/part-0.parquet
 ```
 
-See `requirements.txt` for full list.
+Cleaning result from partition 8:
 
----
+```text
+rows_read=6,140,024
+rows_written=5,538,291
+rows_dropped=601,733
+drop_rate=0.098002
+```
 
-## Author
+## Modeling
 
-**Akshay Sakanaveeti**  
-Department of Statistics and Operations Research  
-University of North Carolina at Chapel Hill  
-sakshay@unc.edu
+The first baseline is LightGBM on cleaned partition 8:
+
+- target: `responder_6`
+- weight: `weight`
+- features: all `feature_` columns plus `symbol_id` and `time_id` if present
+- validation: last 20 `date_id` values
+- output: feature importance and top 20 selected features
+
+## Longleaf Files
+
+Slurm submit files:
+
+```text
+clean_p8.sbatch
+validate_p8.sbatch
+gpu_check.sbatch
+gpu_check_a100.sbatch
+lgbm_top20.sbatch
+make_top20_p8.sbatch
+train_top20_lgbm.sbatch
+```
+
+Cluster-specific Python dependencies are listed in `requirements-longleaf.txt`.
+
+## Repository Notes
+
+Ignored local paths include:
+
+```text
+data/
+models/
+logs/
+experiments/
+archive/
+*.parquet
+```
+
+Old exploratory notebooks are kept locally in `archive/old_notebooks/` and are not intended for GitHub.
