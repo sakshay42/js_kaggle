@@ -1,9 +1,6 @@
 data/
 *.parquet
 experiments/
-models/
-logs/
-archive/
 
 # Python / notebook cache
 __pycache__/
