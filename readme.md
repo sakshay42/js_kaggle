@@ -17,17 +17,29 @@ Current focus: partition 8 only, memory-aware EDA/cleaning, and Longleaf GPU bas
 | `notebooks/04_clean_p8.ipynb` | Notebook version of partition 8 cleaning by dropping missing rows |
 | `notebooks/05_lgbm_sample_p8.ipynb` | Small-sample LightGBM baseline for checking setup and top features |
 | `notebooks/06_top20_lgbm_eval.ipynb` | Post-training evaluation plots for top-20 LightGBM on train/valid/test |
+| `notebooks/07_tree_phase1_p8.ipynb` | Phase 1 tree-model checks for LGBM, XGBoost, and walk-forward validation |
+| `notebooks/08_phase1_model_compare.ipynb` | Phase 1 model comparison dashboard for LGBM, XGBoost, and walk-forward results |
+| `notebooks/09_rolling_features_p8.ipynb` | Phase 2 rolling-feature check on sampled date windows |
 | `scripts/clean_p8.py` | Longleaf script to clean partition 8 in batches |
 | `scripts/validate_p8.py` | Longleaf script to validate cleaned partition 8 |
 | `scripts/gpu_check.py` | Longleaf script to test LightGBM, XGBoost, and PyTorch GPU availability |
 | `scripts/lgbm_top20.py` | Longleaf LightGBM baseline and top-20 feature importance script |
 | `scripts/make_top20_p8.py` | Creates reduced top-20 train/valid/test parquet files |
 | `scripts/train_top20_lgbm.py` | Tunes LightGBM on top-20 train/valid parquet files |
+| `scripts/train_top20_xgb.py` | Tunes XGBoost on top-20 train/valid parquet files |
+| `scripts/walkforward_top20_lgbm.py` | Walk-forward LightGBM validation over validation dates |
+| `scripts/make_rolling_p8.py` | Creates top-20 plus rolling-feature train/valid/test parquet files |
+| `scripts/train_rolling_lgbm.py` | Tunes LightGBM on the rolling-feature dataset |
+| `scripts/train_rolling_xgb.py` | Tunes XGBoost on the rolling-feature dataset |
 
 Model artifacts:
 
 ```text
 models/lgbm/top20_lgbm/
+models/lgbm/top20_walkforward/
+models/lgbm/top20_rolling_lgbm/
+models/xgboost/top20_xgb/
+models/xgboost/top20_rolling_xgb/
 ```
 
 ## Data
@@ -60,6 +72,19 @@ The first baseline is LightGBM on cleaned partition 8:
 - validation: last 20 `date_id` values
 - output: feature importance and top 20 selected features
 
+## Current Results
+
+Validation weighted R2 on partition 8:
+
+| Model | Feature set | Valid weighted R2 |
+|---|---:|---:|
+| XGBoost | top 20 + rolling | 0.005567 |
+| XGBoost | top 20 | 0.005500 |
+| LightGBM | top 20 + rolling | 0.004498 |
+| LightGBM | top 20 | 0.004264 |
+
+Rolling features helped slightly, with XGBoost still the strongest tree model so far.
+
 ## Longleaf Files
 
 Slurm submit files:
@@ -72,6 +97,11 @@ gpu_check_a100.sbatch
 lgbm_top20.sbatch
 make_top20_p8.sbatch
 train_top20_lgbm.sbatch
+train_top20_xgb.sbatch
+walkforward_top20_lgbm.sbatch
+make_rolling_p8.sbatch
+train_rolling_lgbm.sbatch
+train_rolling_xgb.sbatch
 ```
 
 Cluster-specific Python dependencies are listed in `requirements-longleaf.txt`.

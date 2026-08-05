@@ -1,0 +1,4 @@
+name,valid_weighted_r2,best_iteration,elapsed_seconds,num_leaves,learning_rate,min_data_in_leaf,feature_fraction,bagging_fraction,lambda_l2
+more_regularized,0.004498237911223724,51,41.22917175292969,64,0.03,1000,0.8,0.8,5.0
+smaller_leaves,0.004391083293917686,46,30.26859474182129,31,0.03,500,0.9,0.9,1.0
+baseline,0.004236909912598841,46,55.818700551986694,64,0.03,500,0.9,0.9,1.0
