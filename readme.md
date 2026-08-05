@@ -24,6 +24,12 @@ Current focus: partition 8 only, memory-aware EDA/cleaning, and Longleaf GPU bas
 | `scripts/make_top20_p8.py` | Creates reduced top-20 train/valid/test parquet files |
 | `scripts/train_top20_lgbm.py` | Tunes LightGBM on top-20 train/valid parquet files |
 
+Model artifacts:
+
+```text
+models/lgbm/top20_lgbm/
+```
+
 ## Data
 
 Raw and cleaned parquet files are not tracked in git.

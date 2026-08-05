@@ -10,7 +10,7 @@ import pandas as pd
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJECT_ROOT / "data" / "top20_p8"
-MODEL_DIR = PROJECT_ROOT / "models" / "top20_lgbm"
+MODEL_DIR = PROJECT_ROOT / "models" / "lgbm" / "top20_lgbm"
 LOG_DIR = PROJECT_ROOT / "logs"
 
 TRAIN_PATH = DATA_DIR / "train.parquet"
