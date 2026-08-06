@@ -32,6 +32,13 @@ The test split is an internal out-of-time partition, not Kaggle's hidden test se
 
 Training and large experiments ran on NVIDIA GPUs through UNC Longleaf.
 
+## Tools
+
+- **Data:** NumPy, pandas, PyArrow, and Parquet for batch processing and feature construction
+- **Machine learning:** LightGBM, XGBoost, scikit-learn, and PyTorch
+- **Analysis:** Jupyter, Matplotlib, and Seaborn for experiments and diagnostics
+- **Compute:** Slurm jobs on UNC Longleaf with NVIDIA GPUs
+
 ## Results
 
 Weighted zero-mean R2 on the partition 8 chronological splits:
