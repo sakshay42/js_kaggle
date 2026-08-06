@@ -1,5 +1,0 @@
-fold,valid_date_min,valid_date_max,train_rows,valid_rows,best_iteration,valid_weighted_r2,elapsed_seconds,model_path
-1,1490,1494,4162125,160919,75,0.006254042502437995,47.246418714523315,/users/s/a/sakshay/js_kaggle/models/lgbm/top20_walkforward/fold_01_1490_1494.txt
-2,1495,1499,4323044,173383,33,0.0038924048650932352,33.08061122894287,/users/s/a/sakshay/js_kaggle/models/lgbm/top20_walkforward/fold_02_1495_1499.txt
-3,1500,1504,4496427,170925,42,0.004224690432332867,36.075740337371826,/users/s/a/sakshay/js_kaggle/models/lgbm/top20_walkforward/fold_03_1500_1504.txt
-4,1505,1509,4667352,174922,132,0.009985611426614471,53.36089324951172,/users/s/a/sakshay/js_kaggle/models/lgbm/top20_walkforward/fold_04_1505_1509.txt

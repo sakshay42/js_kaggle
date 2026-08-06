@@ -9,6 +9,7 @@ tqdm
 joblib
 psutil
 optuna
+torch
 torchmetrics
 pytorch-lightning
 einops

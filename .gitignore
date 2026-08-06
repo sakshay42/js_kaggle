@@ -1,6 +1,14 @@
 data/
 *.parquet
 experiments/
+archive/
+logs/
+models/
+output/
+*.pdf
+
+# Local report builder
+scripts/build_final_interview_pdf.py
 
 # Python / notebook cache
 __pycache__/

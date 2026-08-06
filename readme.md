@@ -1,122 +1,61 @@
 # Jane Street Real-Time Market Data Forecasting
 
-Project workspace for the Jane Street Real-Time Market Data Forecasting Kaggle competition.
+An empirical forecasting project based on the [Jane Street Real-Time Market Data Forecasting competition](https://www.kaggle.com/competitions/jane-street-real-time-market-data-forecasting/overview). The project focuses on memory-efficient processing, chronological validation, tree models, temporal feature engineering, neural regularization, and model ensembles.
 
-Current focus: partition 8 only, memory-aware EDA/cleaning, and Longleaf GPU baselines.
+## Dataset
 
-## Current Workflow
+The analysis uses training partition 8:
 
-| File | Purpose |
-|---|---|
-| `notebooks/01_kaggle_eda.ipynb` | Original Kaggle EDA notebook |
-| `notebooks/02_kaggle_lgbm.ipynb` | Original Kaggle LightGBM experiments |
-| `notebooks/03_kaggle_factor.ipynb` | Original Kaggle factor/PCA experiments |
-| `notebooks/01_loader_p8.ipynb` | Batch parquet loader for partition 8 without loading the full dataset into memory |
-| `notebooks/02_sample_eda_p8.ipynb` | Small sample EDA for missingness, weights, symbols, and feature relationships |
-| `notebooks/03_stream_eda_p8.ipynb` | Streaming EDA over full partition 8 using aggregates instead of full in-memory data |
-| `notebooks/04_clean_p8.ipynb` | Notebook version of partition 8 cleaning by dropping missing rows |
-| `notebooks/05_lgbm_sample_p8.ipynb` | Small-sample LightGBM baseline for checking setup and top features |
-| `notebooks/06_top20_lgbm_eval.ipynb` | Post-training evaluation plots for top-20 LightGBM on train/valid/test |
-| `notebooks/07_tree_phase1_p8.ipynb` | Phase 1 tree-model checks for LGBM, XGBoost, and walk-forward validation |
-| `notebooks/08_phase1_model_compare.ipynb` | Phase 1 model comparison dashboard for LGBM, XGBoost, and walk-forward results |
-| `notebooks/09_rolling_features_p8.ipynb` | Phase 2 rolling-feature check on sampled date windows |
-| `scripts/clean_p8.py` | Longleaf script to clean partition 8 in batches |
-| `scripts/validate_p8.py` | Longleaf script to validate cleaned partition 8 |
-| `scripts/gpu_check.py` | Longleaf script to test LightGBM, XGBoost, and PyTorch GPU availability |
-| `scripts/lgbm_top20.py` | Longleaf LightGBM baseline and top-20 feature importance script |
-| `scripts/make_top20_p8.py` | Creates reduced top-20 train/valid/test parquet files |
-| `scripts/train_top20_lgbm.py` | Tunes LightGBM on top-20 train/valid parquet files |
-| `scripts/train_top20_xgb.py` | Tunes XGBoost on top-20 train/valid parquet files |
-| `scripts/walkforward_top20_lgbm.py` | Walk-forward LightGBM validation over validation dates |
-| `scripts/make_rolling_p8.py` | Creates top-20 plus rolling-feature train/valid/test parquet files |
-| `scripts/train_rolling_lgbm.py` | Tunes LightGBM on the rolling-feature dataset |
-| `scripts/train_rolling_xgb.py` | Tunes XGBoost on the rolling-feature dataset |
-
-Model artifacts:
-
-```text
-models/lgbm/top20_lgbm/
-models/lgbm/top20_walkforward/
-models/lgbm/top20_rolling_lgbm/
-models/xgboost/top20_xgb/
-models/xgboost/top20_rolling_xgb/
-```
-
-## Data
-
-Raw and cleaned parquet files are not tracked in git.
-
-Expected Longleaf paths:
-
-```text
-/users/s/a/sakshay/js_kaggle/data/part_8.parquet
-/users/s/a/sakshay/js_kaggle/data/clean/partition_8_drop_missing/part-0.parquet
-```
-
-Cleaning result from partition 8:
-
-```text
-rows_read=6,140,024
-rows_written=5,538,291
-rows_dropped=601,733
-drop_rate=0.098002
-```
-
-## Modeling
-
-The first baseline is LightGBM on cleaned partition 8:
-
+- 6,140,024 raw rows and 79 anonymized `feature_` columns
 - target: `responder_6`
-- weight: `weight`
-- features: all `feature_` columns plus `symbol_id` and `time_id` if present
-- validation: last 20 `date_id` values
-- output: feature importance and top 20 selected features
+- sample weight: `weight`
+- identifiers: `date_id`, `time_id`, and `symbol_id`
 
-## Current Results
+Rows with missing features, target, or weight were removed in streaming batches, leaving 5,538,291 rows. The cleaned data were split chronologically:
 
-Validation weighted R2 on partition 8:
-
-| Model | Feature set | Valid weighted R2 |
+| Split | Dates | Rows |
 |---|---:|---:|
-| XGBoost | top 20 + rolling | 0.005567 |
-| XGBoost | top 20 | 0.005500 |
-| LightGBM | top 20 + rolling | 0.004498 |
-| LightGBM | top 20 | 0.004264 |
+| Train | 1360-1489 | 4,162,125 |
+| Validation | 1490-1509 | 680,149 |
+| Test | 1510-1529 | 696,017 |
 
-Rolling features helped slightly, with XGBoost still the strongest tree model so far.
+The test split is an internal out-of-time partition, not Kaggle's hidden test set.
 
-## Longleaf Files
+## Approach
 
-Slurm submit files:
+1. Stream parquet data with PyArrow to avoid materializing the full partition in memory.
+2. Use LightGBM gain importance to reduce 81 candidate inputs to 20.
+3. Tune LightGBM and XGBoost with chronological and expanding-window validation.
+4. Add 5- and 20-step symbol-level rolling means and standard deviations using lagged features only.
+5. Train MLP and GRU+MLP models, diagnose overfitting, and test dropout, weight decay, LayerNorm, Huber loss, early stopping, prediction shrinkage, and multiple seeds.
+6. Evaluate date-by-date online neural updates and tree-neural ensembles.
 
-```text
-clean_p8.sbatch
-validate_p8.sbatch
-gpu_check.sbatch
-gpu_check_a100.sbatch
-lgbm_top20.sbatch
-make_top20_p8.sbatch
-train_top20_lgbm.sbatch
-train_top20_xgb.sbatch
-walkforward_top20_lgbm.sbatch
-make_rolling_p8.sbatch
-train_rolling_lgbm.sbatch
-train_rolling_xgb.sbatch
-```
+Training and large experiments ran on NVIDIA GPUs through UNC Longleaf.
 
-Cluster-specific Python dependencies are listed in `requirements-longleaf.txt`.
+## Results
 
-## Repository Notes
+Weighted zero-mean R2 on the partition 8 chronological splits:
 
-Ignored local paths include:
+| Model | Validation R2 | Test R2 |
+|---|---:|---:|
+| Focused MLP + XGBoost ensemble | 0.006523 | 0.004425 |
+| Focused MLP mean | 0.005984 | 0.003024 |
+| Rolling XGBoost | 0.004963 | **0.004996** |
+| Rolling LightGBM | 0.004498 | - |
+| Original MLP | -0.003860 | -0.006744 |
+| Original GRU+MLP | -0.012707 | -0.014378 |
 
-```text
-data/
-models/
-logs/
-experiments/
-archive/
-*.parquet
-```
+Rolling XGBoost was the strongest later-period model. Regularization made the neural models competitive on validation, but those gains transferred less reliably to the test period.
 
-Old exploratory notebooks are kept locally in `archive/old_notebooks/` and are not intended for GitHub.
+The leading competition score was approximately `0.01`; the local score of about `0.005` is of the same order of magnitude. These values are not directly comparable because this project uses one training partition and an internal chronological split rather than the competition's hidden forecasting period.
+
+## Repository
+
+- `notebooks/final.ipynb`: complete project narrative and model comparison
+- `notebooks/`: EDA, data engineering, feature selection, and model-analysis notebooks
+- `scripts/`: cleaning, feature engineering, training, online-update, and ensemble code
+- `slurm/`: Longleaf batch submissions
+- `requirements.txt`: local analysis dependencies
+- `requirements-longleaf.txt`: cluster training dependencies
+
+Raw data, model binaries, logs, generated reports, and archived scratch work are excluded from Git.
